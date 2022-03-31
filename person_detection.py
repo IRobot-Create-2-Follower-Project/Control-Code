@@ -18,7 +18,7 @@ from numpy.linalg import norm
 
 from run_code import Bot
 
-COMPORT = 'COM3'
+COMPORT = 'COM4'
 start_robot = False
 # from adjust_brightness.py import adjust_brightness
 
@@ -56,7 +56,6 @@ def adjust_brightness(image):
     # goal brightness is =
     goal_bn = 120
     beta = goal_bn - brightness_img  #overwrite brightness
-    print('hh')
 
 
     # Do the operation new_image(i,j) = alpha*image(i,j) + beta
@@ -65,12 +64,13 @@ def adjust_brightness(image):
     # but we wanted to show you how to access the pixels :)
 
     new_image = cv2.convertScaleAbs(image, alpha=alpha, beta=beta)
-    print('old_image', brightness_img, 'new_image', brightness(new_image))
+  #  print('old_image', brightness_img, 'new_image', brightness(new_image))
     return new_image
 
 
 
 def main():
+    start_robot = False
     #initialize Bot
     bot = Bot(COMPORT)
     # Configure depth and color streams
@@ -105,12 +105,12 @@ def main():
     # create six trackbars for H, S and V - lower and higher masking limits
     cv2.namedWindow('HSV')
     # arguments: trackbar_name, window_name, default_value, max_value, callback_fn
-    cv2.createTrackbar("HL", "HSV", 0, 180, null)
-    cv2.createTrackbar("HH", "HSV", 180, 180, null)
-    cv2.createTrackbar("SL", "HSV", 121, 255, null)
-    cv2.createTrackbar("SH", "HSV", 255, 255, null)
-    cv2.createTrackbar("VL", "HSV", 184, 255, null)
-    cv2.createTrackbar("VH", "HSV", 255, 255, null)
+    cv2.createTrackbar("HL", "HSV", 34, 180, null)
+    cv2.createTrackbar("HH", "HSV", 92, 180, null)
+    cv2.createTrackbar("SL", "HSV", 24, 255, null)
+    cv2.createTrackbar("SH", "HSV", 73, 255, null)
+    cv2.createTrackbar("VL", "HSV", 38, 255, null)
+    cv2.createTrackbar("VH", "HSV", 125, 255, null)
 
     align_to = rs.stream.color
     align = rs.align(align_to)
@@ -202,7 +202,10 @@ def main():
                 # put text and highlight the center
                 cv2.circle(color_image_mask, (cX, cY), 5, (255, 255, 255), -1)
                 cv2.putText(color_image_mask, str(dist_ave), (cX - 25, cY - 25),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
-
+            else:
+                bin_centroid = 5
+                dist_ave = 1
+                cX = 320
             # If depth and color resolutions are different, resize color image to match depth image for display
             if depth_colormap_dim != color_colormap_dim:
                 resized_color_image = cv2.resize(color_image, dsize=(depth_colormap_dim[1], depth_colormap_dim[0]), interpolation=cv2.INTER_AREA)
@@ -224,8 +227,9 @@ def main():
             if key == ord('q'):
                 break
 
-            if key == ord('s'):
-                start_robot = True
+         #   if key == ord('s'):
+         #       start_robot = True
+            start_robot = True
 
             bins = depth_image.shape[1] / 10
             bin_centroid = int((cX + 5) / bins)
