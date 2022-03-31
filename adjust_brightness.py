@@ -18,43 +18,42 @@ def brightness(img):
 
 
 ##### main #####
-
-image = cv.imread('Frame01.jpg')
-if image is None:
-    print('Could not open or find the image')
-    exit(0)
-
-
-new_image = np.zeros(image.shape, image.dtype)
+def adjust_brightness(image):
+    # image = cv.imread('Frame01.jpg')
+    if image is None:
+        print('Could not open or find the image')
+        exit(0)
 
 
-alpha = 1.0 # Simple contrast control
-#beta = 50   # Simple brightness control
-
-####adjustable brightness control####
-
-#check for actual brightness of the image
-brightness_img = brightness(image)
-print(brightness_img)
-
-# goal brightness is =
-goal_bn = 120
-beta = goal_bn - brightness_img  #overwrite brightness
+    new_image = np.zeros(image.shape, image.dtype)
 
 
-# Do the operation new_image(i,j) = alpha*image(i,j) + beta
-# Instead of these 'for' loops we could have used simply:
-# new_image = cv.convertScaleAbs(image, alpha=alpha, beta=beta)
-# but we wanted to show you how to access the pixels :)
+    alpha = 1.0 # Simple contrast control
+    #beta = 50   # Simple brightness control
 
-new_image = cv.convertScaleAbs(image, alpha=alpha, beta=beta)
+    ####adjustable brightness control####
 
+    #check for actual brightness of the image
+    brightness_img = brightness(image)
+    print(brightness_img)
 
-# Show stuff
-cv.imshow('Original Image', image)
-cv.imshow('New Image', new_image)
-
-# Wait until user press some key
-cv.waitKey()
+    # goal brightness is =
+    goal_bn = 120
+    beta = goal_bn - brightness_img  #overwrite brightness
 
 
+    # Do the operation new_image(i,j) = alpha*image(i,j) + beta
+    # Instead of these 'for' loops we could have used simply:
+    # new_image = cv.convertScaleAbs(image, alpha=alpha, beta=beta)
+    # but we wanted to show you how to access the pixels :)
+
+    new_image = cv.convertScaleAbs(image, alpha=alpha, beta=beta)
+    return new_image
+
+
+    # Show stuff
+    # cv.imshow('Original Image', image)
+    # cv.imshow('New Image', new_image)
+    #
+    # # Wait until user press some key
+    # cv.waitKey()
