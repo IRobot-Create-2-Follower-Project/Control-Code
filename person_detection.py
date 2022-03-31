@@ -19,6 +19,7 @@ from numpy.linalg import norm
 from run_code import Bot
 
 COMPORT = 'COM3'
+start_robot = False
 # from adjust_brightness.py import adjust_brightness
 
 
@@ -222,10 +223,14 @@ def main():
             if key == ord('q'):
                 break
 
+            if key == ord('s'):
+                start_robot = True
+
             bins = depth_image.shape[1] / 10
             bin_centroid = int((cX + 5) / bins)
 
-            bot.drive(bin_centroid, dist_ave)
+            if start_robot:
+                bot.drive(bin_centroid, dist_ave)
 
 
         cv2.destroyAllWindows()
