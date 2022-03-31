@@ -31,7 +31,7 @@ try:
         for y in range(480):
             for x in range(640):
                 dist = depth.get_distance(x, y)
-                if 0 < dist and dist < 1:
+                if 0.5 < dist and dist < 1:
                     coverage[x//10] += 1
 
             if y%20 is 19:

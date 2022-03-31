@@ -32,14 +32,10 @@ if not found_rgb:
     exit(0)
 
 config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
-
-if device_product_line == 'L500':
-    config.enable_stream(rs.stream.color, 960, 540, rs.format.bgr8, 30)
-else:
-    config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
+config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
 
 # Start streaming
-pipeline.start(config)
+profile = pipeline.start(config)
 
 # define a null callback function for Trackbar
 def null(x):
@@ -55,23 +51,23 @@ cv2.createTrackbar("SH", "HSV", 255, 255, null)
 cv2.createTrackbar("VL", "HSV", 184, 255, null)
 cv2.createTrackbar("VH", "HSV", 255, 255, null)
 
-
+align_to = rs.stream.color
+align = rs.align(align_to)
 
 try:
     while True:
 
         # Wait for a coherent pair of frames: depth and color
         frames = pipeline.wait_for_frames()
-        depth_frame = frames.get_depth_frame()
-        color_frame = frames.get_color_frame()
+        aligned_frames = align.process(frames)
+        depth_frame = aligned_frames.get_depth_frame()
+        color_frame = aligned_frames.get_color_frame()
         if not depth_frame or not color_frame:
             continue
 
         # Convert images to numpy arrays
         depth_image = np.asanyarray(depth_frame.get_data())
         color_image = np.asanyarray(color_frame.get_data())
-        color_image = cv2.resize(color_image, (320,280))
-        depth_image = cv2.resize(depth_image, (320,280))
 
         img = color_image
 
@@ -89,14 +85,27 @@ try:
         # create a manually controlled mask
         # arguments: hsv_image, lower_trackbars, higher_trackbars
         mask = cv2.inRange(hsv, np.array([hl, sl, vl]), np.array([hh, sh, vh]))
+
+        contours, hierarchy = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        # c = max(contours, )
+        #draw the obtained contour lines(or the set of coordinates forming a line) on the original image
+
         # derive masked image using bitwise_and method
         final = cv2.bitwise_and(img, img, mask=mask)
+        # depth_frame = cv2.bitwise_and(depth_image, depth_image, mask=mask)
+        # distance = np.mean(np.nonzero(depth_frame))
+        # print(distance)
 
         # Apply colormap on depth image (image must be converted to 8-bit per pixel first)
         depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.03), cv2.COLORMAP_JET)
 
         depth_colormap_mask = cv2.bitwise_and(depth_colormap, depth_colormap, mask=mask)
         color_image_mask = cv2.bitwise_and(color_image, color_image, mask=mask)
+        try:
+            cv2.drawContours(color_image_mask, max(contours, key = cv2.contourArea), -1, (0,255,0), 3)
+        except:
+            t = 0
+            # print("error")
 
         depth_colormap_dim = depth_colormap.shape
         color_colormap_dim = color_image.shape
@@ -107,16 +116,32 @@ try:
         if M["m00"] != 0:
             cX = int(M["m10"] / M["m00"])
             cY = int(M["m01"] / M["m00"])
+
+            # depth_scale = profile.get_device().first_depth_sensor().get_depth_scale()
+            # print(depth_scale)
+            box_size = 10
+            sum = 0
+            for x in range(-box_size, box_size):
+                for y in range(-box_size, box_size):
+                    dist_pixel = depth_frame.get_distance(cX + x, cY + y)
+                    sum += dist_pixel
+            dist_ave = sum / (box_size*2)**2
+            depth_colormap = cv2.rectangle(depth_colormap, (cX-box_size, cY-box_size), (cX+box_size, cY+box_size), (255,0,0),2)
+            # depth = depth_image[cX-box_size:cX+box_size,cY-box_size:cY+box_size].astype(float)
+            # depth = depth * depth_scale
+            # dist,_,_,_ = cv2.mean(depth)
+
+            # distance = depth_frame.get_distance(cX, cY)
             # put text and highlight the center
             cv2.circle(color_image_mask, (cX, cY), 5, (255, 255, 255), -1)
-            cv2.putText(color_image_mask, "centroid", (cX - 25, cY - 25),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+            cv2.putText(color_image_mask, str(dist_ave), (cX - 25, cY - 25),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
 
         # If depth and color resolutions are different, resize color image to match depth image for display
         if depth_colormap_dim != color_colormap_dim:
             resized_color_image = cv2.resize(color_image, dsize=(depth_colormap_dim[1], depth_colormap_dim[0]), interpolation=cv2.INTER_AREA)
             images = np.hstack((resized_color_image, depth_colormap))
         else:
-            images = np.hstack((color_image_mask, depth_colormap_mask))
+            images = np.hstack((color_image_mask, depth_colormap))
 
 
         # display image, mask and masked_image
