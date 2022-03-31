@@ -56,6 +56,7 @@ def adjust_brightness(image):
     # goal brightness is =
     goal_bn = 120
     beta = goal_bn - brightness_img  #overwrite brightness
+    print('hh')
 
 
     # Do the operation new_image(i,j) = alpha*image(i,j) + beta
