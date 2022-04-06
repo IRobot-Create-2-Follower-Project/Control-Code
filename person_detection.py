@@ -235,6 +235,7 @@ def main():
             bin_centroid = int((cX + 5) / bins)
 
             if start_robot:
+                print(bin_centroid, dist_ave)
                 bot.drive(bin_centroid, dist_ave)
 
 
