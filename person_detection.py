@@ -17,8 +17,9 @@ from builtins import input
 from numpy.linalg import norm
 
 from run_code import Bot
+import keyboard
 
-COMPORT = 'COM4'
+COMPORT = 'COM12'
 start_robot = False
 # from adjust_brightness.py import adjust_brightness
 
@@ -105,15 +106,18 @@ def main():
     # create six trackbars for H, S and V - lower and higher masking limits
     cv2.namedWindow('HSV')
     # arguments: trackbar_name, window_name, default_value, max_value, callback_fn
-    cv2.createTrackbar("HL", "HSV", 34, 180, null)
-    cv2.createTrackbar("HH", "HSV", 92, 180, null)
-    cv2.createTrackbar("SL", "HSV", 24, 255, null)
-    cv2.createTrackbar("SH", "HSV", 73, 255, null)
-    cv2.createTrackbar("VL", "HSV", 38, 255, null)
-    cv2.createTrackbar("VH", "HSV", 125, 255, null)
+    cv2.createTrackbar("HL", "HSV", 0, 180, null)
+    cv2.createTrackbar("HH", "HSV", 180, 180, null)
+    cv2.createTrackbar("SL", "HSV", 192, 255, null)
+    cv2.createTrackbar("SH", "HSV", 255, 255, null)
+    cv2.createTrackbar("VL", "HSV", 0, 255, null)
+    cv2.createTrackbar("VH", "HSV", 213, 255, null)
+
+    0-180, 121-255, 184-255
 
     align_to = rs.stream.color
     align = rs.align(align_to)
+    last_bin = 0
 
 
     try:
@@ -227,16 +231,25 @@ def main():
             if key == ord('q'):
                 break
 
-         #   if key == ord('s'):
-         #       start_robot = True
-            start_robot = True
+            if keyboard.is_pressed('s'):
+                print('starting robot')
+                start_robot = True
+
 
             bins = depth_image.shape[1] / 10
             bin_centroid = int((cX + 5) / bins)
+            if np.sum(mask) / 255 < 30000:
+                if last_bin < 5:
+                    print('right')
+                    bin_centroid = -1
+                if last_bin > 5:
+                    print('left')
+                    bin_centroid = 11
 
             if start_robot:
-                print(bin_centroid, dist_ave)
+                # print(bin_centroid, dist_ave)
                 bot.drive(bin_centroid, dist_ave)
+            last_bin = bin_centroid
 
 
         cv2.destroyAllWindows()
