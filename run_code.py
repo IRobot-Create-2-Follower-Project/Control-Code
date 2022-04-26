@@ -33,7 +33,7 @@ class Bot():
                 bin_min = 4
 
             if(bin < bin_max and bin > bin_min):
-                if distance < set_distance + 0.2 and distance > set_distance - 0.2:
+                if distance < set_distance + 0.1 and distance > set_distance - 0.1:
                     self.bot.drive_direct(0, 0)  # Wait to see if object moves or is stationary
                 else:
                     speed = int(kp*(distance - set_distance))
