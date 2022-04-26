@@ -167,6 +167,7 @@ def main():
 
             depth_colormap_mask = cv2.bitwise_and(depth_colormap, depth_colormap, mask=mask)
             color_image_mask = cv2.bitwise_and(color_image, color_image, mask=mask)
+            color_image_mask = cv2.morphologyEx(color_image_mask, cv2.MORPH_OPEN, kernel) #Erosion-dilation
             try:
                 cv2.drawContours(color_image_mask, max(contours, key = cv2.contourArea), -1, (0,255,0), 3)
             except:
